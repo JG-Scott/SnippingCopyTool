@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SnippingCopyTool")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b5f99c100343de42d4e59bf2f34fe7b52db0bdcb")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1d4e2225946b7e669798ece4d118ad18bc56f8b6")]
 [assembly: System.Reflection.AssemblyProductAttribute("SnippingCopyTool")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SnippingCopyTool")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

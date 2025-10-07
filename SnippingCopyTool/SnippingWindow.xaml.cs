@@ -35,10 +35,11 @@ using WpfRectangle = System.Windows.Shapes.Rectangle;
             private System.Windows.Point start;
             private bool dragging = false;
             private bool HasCaptureArea = false;
-
-            public SnippingWindow()
+            private MainWindow _mainWindow;
+            public SnippingWindow(MainWindow mainWindow)
             {
                 InitializeComponent();
+                _mainWindow = mainWindow;
                 // Capture ESC to cancel
                 this.KeyDown += Window_KeyDown;
             }
@@ -56,10 +57,6 @@ using WpfRectangle = System.Windows.Shapes.Rectangle;
                     SelRect.Visibility = Visibility.Visible;
                     dragging = true;
                     Mouse.Capture(this);
-                }
-                else if (e.ChangedButton == MouseButton.Right)
-                {
-                    //Close(); // right-click to cancel
                 }
             }
 
@@ -168,7 +165,7 @@ using WpfRectangle = System.Windows.Shapes.Rectangle;
 
             }
 
-            void CopyFromScreen()
+            async void CopyFromScreen()
             {
                 int x = (int)Canvas.GetLeft(SelRect);
                 int y = (int)Canvas.GetTop(SelRect);
@@ -182,71 +179,57 @@ using WpfRectangle = System.Windows.Shapes.Rectangle;
                     {
                         g.CopyFromScreen(x - 10, y - 10, 0, 0, new System.Drawing.Size(width + 10, height + 10), CopyPixelOperation.SourceCopy);
                     }
-
-                    // Convert to WPF bitmap
-                    IntPtr hBmp = bmp.GetHbitmap();
-                    try
-                    {
-                        var bitmapSource = Imaging.CreateBitmapSourceFromHBitmap(hBmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-                        //Clipboard.SetImage(bitmapSource); // copy to clipboard
-                        //                                  // Load image and create SoftwareBitmap
-                        CaptureNumbersFromScreenShot(bmp);
-                    }
-                    finally
-                    {
-                        NativeMethods.DeleteObject(hBmp);
-
-                    }
+                       await CaptureNumbersFromScreenShot(bmp);
                 }
+            _mainWindow.Show();
+            this.Close();
+        }
 
-            }
+            //public static Bitmap IncreaseDpi(Bitmap input, float scale = 2.0f)
+            //{
+            //    int newWidth = (int)(input.Width * scale);
+            //    int newHeight = (int)(input.Height * scale);
 
-            public static Bitmap IncreaseDpi(Bitmap input, float scale = 2.0f)
+            //    // Create a new higher-resolution bitmap
+            //    Bitmap highDpiBitmap = new Bitmap(newWidth, newHeight);
+            //    highDpiBitmap.SetResolution(input.HorizontalResolution * scale, input.VerticalResolution * scale);
+                        
+            //    using (Graphics g = Graphics.FromImage(highDpiBitmap))
+            //    {
+            //        g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            //        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+            //        g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+            //        g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+
+            //        g.DrawImage(input, new System.Drawing.Rectangle(0, 0, newWidth, newHeight));
+            //    }
+            //    //input.Dispose();
+            //    return highDpiBitmap;
+            //}
+            //public static Bitmap AddPadding(Bitmap input, int padding = 40)
+            //{
+            //    Bitmap padded = new Bitmap(input.Width + padding * 2, input.Height + padding * 2);
+            //    //input.Dispose();
+            //    using (Graphics g = Graphics.FromImage(padded))
+            //    {
+            //        g.Clear(System.Drawing.Color.White);
+            //        g.DrawImage(input, padding, padding);
+            //    }
+            //    return padded;
+            //}
+
+            async Task CaptureNumbersFromScreenShot(Bitmap BMP)
             {
-                int newWidth = (int)(input.Width * scale);
-                int newHeight = (int)(input.Height * scale);
+                //Bitmap padding = AddPadding(BMP, 40);
+                //Bitmap processed = IncreaseDpi(padding, 3);
 
-                // Create a new higher-resolution bitmap
-                Bitmap highDpiBitmap = new Bitmap(newWidth, newHeight);
-                highDpiBitmap.SetResolution(input.HorizontalResolution * scale, input.VerticalResolution * scale);
-
-                using (Graphics g = Graphics.FromImage(highDpiBitmap))
-                {
-                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                    g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-                    g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
-                    g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
-
-                    g.DrawImage(input, new System.Drawing.Rectangle(0, 0, newWidth, newHeight));
-                }
-
-                return highDpiBitmap;
-            }
-            public static Bitmap AddPadding(Bitmap input, int padding = 40)
-            {
-                Bitmap padded = new Bitmap(input.Width + padding * 2, input.Height + padding * 2);
-                using (Graphics g = Graphics.FromImage(padded))
-                {
-                    g.Clear(System.Drawing.Color.White);
-                    g.DrawImage(input, padding, padding);
-                }
-                return padded;
-            }
-
-            async void CaptureNumbersFromScreenShot(Bitmap BMP)
-            {
-                Bitmap padding = AddPadding(BMP, 40);
-                Bitmap processed = IncreaseDpi(padding, 3);
-
-                string recognizedText = await ExtractNumbersFromBitmapAsync(processed);
+                string recognizedText = await ExtractNumbersFromBitmapAsync(BMP);
 
                 Clipboard.SetText(recognizedText);
                 if (string.IsNullOrWhiteSpace(recognizedText))
                     MessageBox.Show("No text detected.");
                 else
                     MessageBox.Show($"Detected text:\n{recognizedText}");
-
-                this.Close();
             }
 
             public static async Task<string> ExtractNumbersFromBitmapAsync(Bitmap bitmap)
@@ -262,27 +245,36 @@ using WpfRectangle = System.Windows.Shapes.Rectangle;
                     // Convert to WinRT stream
                     using (IRandomAccessStream stream = new InMemoryRandomAccessStream())
                     {
-                        await stream.WriteAsync(memoryStream.GetBuffer().AsBuffer());
+                        await stream.WriteAsync(memoryStream.ToArray().AsBuffer());
                         stream.Seek(0);
 
                         // Decode the image into a SoftwareBitmap
                         var decoder = await Windows.Graphics.Imaging.BitmapDecoder.CreateAsync(stream);
                         SoftwareBitmap softwareBitmap = await decoder.GetSoftwareBitmapAsync();
-
-                        // Ensure format is compatible with OCR (Gray8 or Bgra8)
-                        if (softwareBitmap.BitmapPixelFormat != BitmapPixelFormat.Bgra8 &&
-                            softwareBitmap.BitmapPixelFormat != BitmapPixelFormat.Gray8)
+                        try
                         {
-                            softwareBitmap = SoftwareBitmap.Convert(softwareBitmap, BitmapPixelFormat.Bgra8);
-                        }
+                            // Ensure format is compatible with OCR (Gray8 or Bgra8)
+                            if (softwareBitmap.BitmapPixelFormat != BitmapPixelFormat.Bgra8 &&
+                                softwareBitmap.BitmapPixelFormat != BitmapPixelFormat.Gray8)
+                            {
+                                softwareBitmap = SoftwareBitmap.Convert(softwareBitmap, BitmapPixelFormat.Bgra8);
+                            }
 
-                        // Run OCR
-                        var ocrEngine = OcrEngine.TryCreateFromLanguage(new Windows.Globalization.Language("en"));
-                        var ocrResult = await ocrEngine.RecognizeAsync(softwareBitmap);
-                        // Optional: Extract only numbers
-                        var matches = Regex.Matches(ocrResult.Text, @"\d+");
-                        string numbersOnly = string.Join("\n", matches.Select(m => m.Value));
-                        return numbersOnly;
+                            // Run OCR
+                            var ocrEngine = OcrEngine.TryCreateFromLanguage(new Windows.Globalization.Language("en"));
+                            var ocrResult = await ocrEngine.RecognizeAsync(softwareBitmap);
+                            // Optional: Extract only numbers
+                            var matches = Regex.Matches(ocrResult.Text, @"\d+");
+
+                            string numbersOnly = string.Join("\n", matches.Select(m => m.Value));
+                            return numbersOnly;
+                        }
+                        finally 
+                        {
+
+                        softwareBitmap.Dispose();
+                        }
+                     
                     }
                 }
             }
@@ -394,4 +386,4 @@ using WpfRectangle = System.Windows.Shapes.Rectangle;
             internal static extern bool DeleteObject(IntPtr hObject);
         }
     }
-}
+
