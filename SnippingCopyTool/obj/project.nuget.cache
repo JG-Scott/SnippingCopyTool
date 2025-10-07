@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "xpVIZFjxlFU=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\johnn\\source\\repos\\SnippingCopyToolRepo\\SnippingCopyTool\\SnippingCopyTool\\SnippingCopyTool.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\johnn\\.nuget\\packages\\microsoft.win32.systemevents\\9.0.9\\microsoft.win32.systemevents.9.0.9.nupkg.sha512",
+    "C:\\Users\\johnn\\.nuget\\packages\\system.drawing.common\\9.0.9\\system.drawing.common.9.0.9.nupkg.sha512",
+    "C:\\Users\\johnn\\.nuget\\packages\\microsoft.windows.sdk.net.ref\\10.0.19041.57\\microsoft.windows.sdk.net.ref.10.0.19041.57.nupkg.sha512"
+  ],
+  "logs": []
+}

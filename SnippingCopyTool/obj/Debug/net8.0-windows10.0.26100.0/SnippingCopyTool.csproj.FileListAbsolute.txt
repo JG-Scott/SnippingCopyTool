@@ -1,0 +1,1 @@
+C:\Users\johnn\source\repos\SnippingCopyTool\SnippingCopyTool\obj\Debug\net8.0-windows10.0.26100.0\SnippingCopyTool.csproj.AssemblyReference.cache
